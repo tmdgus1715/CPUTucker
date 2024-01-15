@@ -1,0 +1,41 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: g++ build active file",
+			"command": "/usr/bin/g++",
+			"args": [
+				"${workspaceFolder}/*.cpp",
+				"${workspaceFolder}/source/cputucker/*.cpp",
+				"-Wdeprecated-declarations",
+				"-Wno-write-strings",
+				"-fopenmp",
+				"-O2",
+				"-I${workspaceFolder}/include",
+				"-I${workspaceFolder}/lib",
+				"-I",
+				"/usr/include/boost",
+				"-L",
+				"/usr/lib/x86_64-linux-gnu",
+				"-std=c++14",
+				"-lboost_program_options",
+				"-lboost_filesystem",
+				"-lboost_system",
+				"-o",
+				"${workspaceFolder}/CPUTucker",
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compiler: /usr/bin/g++"
+		}
+	]
+}
