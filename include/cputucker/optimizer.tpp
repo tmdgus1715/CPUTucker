@@ -34,17 +34,6 @@ size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::GetAllDataSize() {
 }
 
 OPTIMIZER_TEMPLATE
-size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::GetAllTransferSize() {
-  size_t ret_size = 0;
-
-  ret_size += this->_get_transfer_size_sub_tensor();
-  ret_size += this->_get_transfer_size_core_tensor();
-  ret_size += this->_get_transfer_size_sub_factors();
-  ret_size += this->_get_transfer_size_delta();
-  return ret_size;
-}
-
-OPTIMIZER_TEMPLATE
 typename Optimizer<OPTIMIZER_TEMPLATE_ARGS>::index_t*
 Optimizer<OPTIMIZER_TEMPLATE_ARGS>::FindPartitionParms() {
   MYPRINT("Find partition find_partition_parms\n");
@@ -60,66 +49,9 @@ Optimizer<OPTIMIZER_TEMPLATE_ARGS>::FindPartitionParms() {
     partition_dims[axis] = 1;
   }
   this->_RefreshBlockDims();
-  // Determine partition type (Nonzero-based Partitioning OR Dimension-based
-  // Partitioning)
-  this->_DeterminePartitionType();
+  this->_AvailableNonzeroCountPerTask();
 
   return partition_dims;
-}
-
-OPTIMIZER_TEMPLATE
-void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_DeterminePartitionType() {
-  MYPRINT(
-      "Determine partition type (Nonzero-based Partitioning OR Dimension-based "
-      "Partitioning)\n");
-
-  size_t gpu_total_mem_size = gpu_count * gpu_mem_size;
-
-  size_t required_size = 0;
-  required_size += this->_get_data_size_input_tensor();
-  required_size += gpu_count * this->_get_data_size_core_tensor();
-  required_size += gpu_count * this->_get_data_size_all_factors();
-  required_size += this->_get_data_size_delta();
-
-  printf("Required Size / Total %d GPUs Mem size\t: ", gpu_count);
-  std::cout << common::HumanReadable{(std::uintmax_t)required_size} << " / "
-            << common::HumanReadable{(std::uintmax_t)gpu_total_mem_size}
-            << std::endl;
-
-  if (required_size <= gpu_total_mem_size) {
-    partition_type = cputucker::enums::PartitionTypes::kNonzeroPartition;
-    std::cout << "\t- Partitioning Type: Nonzero-based (Small-scale)\n"
-              << std::endl;
-    this->_NonzeroBasedPartitioning();
-  } else {
-    partition_type = cputucker::enums::PartitionTypes::kDimensionPartition;
-    std::cout << "\t- Partitioning Type: Dimension-based (Large-scale)\n"
-              << std::endl;
-    this->_DimensionBasedPartitioning();
-  }
-  this->_AvailableNonzeroCountPerTask();
-}
-
-OPTIMIZER_TEMPLATE
-void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_NonzeroBasedPartitioning() {
-  cuda_stream_count = 1;
-}
-
-OPTIMIZER_TEMPLATE
-void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_DimensionBasedPartitioning() {
-  cuda_stream_count = 4;
-  size_t gpu_stream_buffer_size = gpu_mem_size / cuda_stream_count;
-  uint32_t total_cuda_stream_count = gpu_count * cuda_stream_count;
-
-  int iter = 0;
-  do {
-    ++iter;
-
-    unsigned short partition_axis = this->_NextPartitionAxis();
-    partition_dims[partition_axis]++;
-    this->_RefreshBlockDims();
-  } while (!(GetAllDataSize() < gpu_stream_buffer_size &&
-             block_count >= total_cuda_stream_count));
 }
 
 OPTIMIZER_TEMPLATE
@@ -149,13 +81,6 @@ void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::ToString() {
   for (int axis = 0; axis < order; ++axis) {
     printf("Partition dim[%d] = %lu\n", axis, partition_dims[axis]);
   }
-  std::cout << "\t@ All data size for a CUDA execution seq.\t"
-            << common::HumanReadable{(std::uintmax_t)GetAllDataSize()}
-            << std::endl;
-
-  std::cout << "\t@ All amount of transfer data size \t"
-            << common::HumanReadable{(std::uintmax_t)GetAllTransferSize()}
-            << std::endl;
   printf("The number of blocks: %lu\n", block_count);
   printf("Max. Available nonzeros per task: %lu\n", avail_nnz_count_per_task);
   printf("The number of CUDA Streams in a GPU: %d\n", cuda_stream_count);
@@ -220,47 +145,6 @@ size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_get_data_size_sub_delta() {
   size_t ret_size =
       this->avg_nnz_count_per_block * this->rank * sizeof(value_t);
   return ret_size;
-}
-
-OPTIMIZER_TEMPLATE
-size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_get_transfer_size_sub_tensor() {
-  size_t ret_size = this->_data->nnz_count *
-                    (this->_data->order * sizeof(index_t) + sizeof(value_t));
-  return ret_size;
-}
-OPTIMIZER_TEMPLATE
-size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_get_transfer_size_core_tensor() {
-  return this->_get_data_size_core_tensor();
-}
-OPTIMIZER_TEMPLATE
-size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_get_transfer_size_sub_factors() {
-  unsigned short order = this->_data->order;
-  size_t ret_size = 0;
-  for (unsigned short axis = 0; axis < order; ++axis) {
-    ret_size += block_count * this->block_dims[axis] * this->rank;
-  }
-
-  ret_size *= sizeof(value_t);
-  return ret_size;
-}
-OPTIMIZER_TEMPLATE
-size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_get_transfer_size_delta() {
-  size_t ret_size = this->_data->nnz_count * this->rank * sizeof(value_t);
-  return ret_size;
-}
-
-/* determining the next axis or dimension along which the data will be
- * partitioned. */
-OPTIMIZER_TEMPLATE
-unsigned short Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_NextPartitionAxis() {
-  unsigned short max_axis = 0;
-
-  for (unsigned short axis = 1; axis < this->_data->order; ++axis) {
-    if (block_dims[max_axis] < block_dims[axis]) {
-      max_axis = axis;
-    }
-  }
-  return max_axis;
 }
 
 /* Adjusting block dimensions using partition dimensions */

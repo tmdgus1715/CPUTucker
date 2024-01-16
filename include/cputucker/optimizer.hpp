@@ -25,20 +25,13 @@ class Optimizer {
                   uint64_t new_gpu_mem_size, tensor_t* new_data);
 
   size_t GetAllDataSize();
-  size_t GetAllTransferSize();
   index_t* FindPartitionParms();
   void ToString();
 
  private:
   void _DeterminePartitionType();  // which is the partition type for the input
                                    // tensor?
-  /* Partitioning methods */
-  void _NonzeroBasedPartitioning();
-  void _DimensionBasedPartitioning();
 
-  /* determining the next axis or dimension along which the data will be
-   * partitioned. */
-  unsigned short _NextPartitionAxis();
   /* Adjusting block dimensions using partition dimensions */
   void _RefreshBlockDims();
   void _AvailableNonzeroCountPerTask();
@@ -54,11 +47,6 @@ class Optimizer {
   size_t _get_data_size_sub_factors();
   size_t _get_data_size_sub_delta();  // intermediate data size using available
                                       // nnz count;
-
-  size_t _get_transfer_size_sub_tensor();
-  size_t _get_transfer_size_core_tensor();
-  size_t _get_transfer_size_sub_factors();
-  size_t _get_transfer_size_delta();  // intermediate data size
 
  public:
   int cuda_stream_count;
