@@ -21,7 +21,7 @@ class CommandLineOptions {
   const std::string&  get_input_path() const;
   inline int get_order()      { return this->_order; }
   inline int get_rank()       { return this->_rank; }
-  inline int get_gpu_count()  { return this->_gpu_count; }
+  inline int get_node_count()  { return this->_node_count; }
 
   void Initialize();
   bool ValidateFile();
@@ -32,7 +32,7 @@ class CommandLineOptions {
   std::string _input_path;
   int _order;
   int _rank;
-  int _gpu_count;
+  int _node_count;
 }; // class CommandLineOptions
 
 inline const std::string &CommandLineOptions::get_input_path() const {

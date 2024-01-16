@@ -10,7 +10,7 @@ namespace supertensor {
 namespace cputucker {
 
 CommandLineOptions::CommandLineOptions()
-    : _input_path(""), _order(3), _rank(10), _gpu_count(1) {
+    : _input_path(""), _order(3), _rank(10), _node_count(1) {
   Initialize();
 }
 
@@ -27,8 +27,8 @@ void CommandLineOptions::Initialize() {
       "input,i", po::value<std::string>(&this->_input_path),
       "Input tensor path")("order,o", po::value<int>(&this->_order), "Order")(
       "rank,r", po::value<int>(&this->_rank)->default_value(10), "Rank")(
-      "gpus,g", po::value<int>(&this->_gpu_count)->default_value(1),
-      "The number of GPUs");
+      "nodes,n", po::value<int>(&this->_node_count)->default_value(1),
+      "The number of nodes");
 
   this->_options.add(options);
 }
@@ -81,10 +81,10 @@ CommandLineOptions::ReturnStatus CommandLineOptions::Parse(int argc,
                 << this->_rank << std::endl;
     }
 
-    // We can check if the number of GPUs is defaulted
-    if (!var_map["gpus"].defaulted()) {
-      std::cout << "[WARNING] Default value for GPU count overwritten to "
-                << this->_gpu_count << std::endl;
+    // We can check if the number of nodes is defaulted
+    if (!var_map["nodes"].defaulted()) {
+      std::cout << "[WARNING] Default value for Node count overwritten to "
+                << this->_node_count << std::endl;
     }
 
   } catch (std::exception &e) {

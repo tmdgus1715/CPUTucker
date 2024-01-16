@@ -10,14 +10,11 @@ namespace cputucker {
 
 OPTIMIZER_TEMPLATE
 void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::Initialize(
-    unsigned short new_gpu_count, unsigned int new_rank,
-    uint64_t new_gpu_mem_size, tensor_t* new_data) {
-  cuda_stream_count = 1;
+    unsigned short new_node_count, unsigned int new_rank, uint64_t new_mem_size,
+    tensor_t* new_data) {
   rank = new_rank;
-  gpu_count = new_gpu_count;
-  gpu_mem_size = new_gpu_mem_size;
-
-  partition_type = cputucker::enums::PartitionTypes::kDimensionPartition;
+  node_count = new_node_count;
+  mem_size = new_mem_size;
   this->_data = new_data;
 }
 
@@ -49,42 +46,22 @@ Optimizer<OPTIMIZER_TEMPLATE_ARGS>::FindPartitionParms() {
     partition_dims[axis] = 1;
   }
   this->_RefreshBlockDims();
-  this->_AvailableNonzeroCountPerTask();
 
   return partition_dims;
 }
 
-OPTIMIZER_TEMPLATE
-void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_AvailableNonzeroCountPerTask() {
-  size_t gpu_stream_buffer_size = gpu_mem_size / cuda_stream_count;
-  size_t avail_buffer_size =
-      gpu_stream_buffer_size -
-      (this->_get_data_size_core_tensor() + this->_get_data_size_sub_factors());
-  avail_nnz_count_per_task =
-      avail_buffer_size / (this->_data->order * sizeof(index_t) +
-                           sizeof(value_t) + rank * sizeof(value_t));
-}
 
 OPTIMIZER_TEMPLATE
 void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::ToString() {
   PrintLine();
   printf("< OPTIMIZER >\n");
 
-  std::cout << "Partition Type: ";
-  if (partition_type == cputucker::enums::kNonzeroPartition) {
-    std::cout << "Nonzero-based Partitioning" << std::endl;
-  } else {
-    std::cout << "Dimension-based Partitioning" << std::endl;
-  }
-
   unsigned short order = this->_data->order;
   for (int axis = 0; axis < order; ++axis) {
     printf("Partition dim[%d] = %lu\n", axis, partition_dims[axis]);
   }
   printf("The number of blocks: %lu\n", block_count);
-  printf("Max. Available nonzeros per task: %lu\n", avail_nnz_count_per_task);
-  printf("The number of CUDA Streams in a GPU: %d\n", cuda_stream_count);
-  printf("The number of GPUs: %d\n", gpu_count);
+  printf("Avg. nonzeros per a block: %lu\n", avg_nnz_count_per_block);
 }
 
 OPTIMIZER_TEMPLATE
@@ -142,8 +119,7 @@ size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_get_data_size_delta() {
 OPTIMIZER_TEMPLATE
 size_t Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_get_data_size_sub_delta() {
   unsigned short order = this->_data->order;
-  size_t ret_size =
-      this->avg_nnz_count_per_block * this->rank * sizeof(value_t);
+  size_t ret_size = this->avg_nnz_count_per_block * this->rank * sizeof(value_t);
   return ret_size;
 }
 
@@ -166,8 +142,7 @@ void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::_RefreshBlockDims() {
     block_count *= partition_dims[axis];
   }
 
-  avg_nnz_count_per_block =
-      (this->_data->nnz_count + block_count - 1) / block_count;
+  avg_nnz_count_per_block = (this->_data->nnz_count + block_count - 1) / block_count;
 }
 }  // namespace cputucker
 }  // namespace supertensor

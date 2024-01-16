@@ -21,8 +21,8 @@ class Optimizer {
  public:
   Optimizer() {}
   ~Optimizer() {}
-  void Initialize(unsigned short new_gpu_count, unsigned int new_rank,
-                  uint64_t new_gpu_mem_size, tensor_t* new_data);
+  void Initialize(unsigned short new_node_count, unsigned int new_rank,
+                  uint64_t new_mem_size, tensor_t* new_data);
 
   size_t GetAllDataSize();
   index_t* FindPartitionParms();
@@ -49,9 +49,9 @@ class Optimizer {
                                       // nnz count;
 
  public:
-  int cuda_stream_count;
   unsigned int rank;
-  unsigned short gpu_count;
+  unsigned short node_count;
+  uint64_t mem_size;
 
   index_t* block_dims;
   index_t* partition_dims;
@@ -59,10 +59,6 @@ class Optimizer {
 
   uint64_t avg_nnz_count_per_block;  // (estimated) nonzeros per a task
   uint64_t avail_nnz_count_per_task;
-
-  // CostMetric *component_cost;
-  cputucker::enums::PartitionTypes partition_type;
-  size_t gpu_mem_size;
 
  private:
   tensor_t* _data;

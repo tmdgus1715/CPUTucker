@@ -9,13 +9,6 @@ constexpr int kMaxIteration{3};
 constexpr double kLambda{0.0001f};
 }  // namespace constants
 
-namespace enums {
-enum PartitionTypes {
-  kDimensionPartition,  // Large-scale with CUDA streaming
-  kNonzeroPartition,    // Small-scale without CUDA streaming
-  kPartitionTypeCount
-};
-}
 }  // namespace cputucker
 }  // namespace supertensor
 #endif /* CONSTANTS_HPP_ */

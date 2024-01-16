@@ -41,11 +41,10 @@ int main(int argc, char* argv[]) {
     tensor_manager->ParseFromFile(options->get_input_path(), &input_tensor);
     // input_tensor->ToString();
 
-    size_t avail_gpu_mem = common::GiB<size_t>(4);  // 4GiB
+    size_t avail_mem_size = common::GiB<size_t>(4);  // 4GiB
     // Find optimal partition parameters from optimizer
     optimizer_t* optimizer = new optimizer_t;
-    optimizer->Initialize(options->get_gpu_count(), options->get_rank(),
-                          avail_gpu_mem, input_tensor);
+    optimizer->Initialize(options->get_node_count(), options->get_rank(), avail_mem_size, input_tensor);
     index_t* partition_dims = optimizer->FindPartitionParms();
 
     // Create tensor blocks ( = sub-tensors )
@@ -57,7 +56,7 @@ int main(int argc, char* argv[]) {
     // TODO block scheduling
     MYPRINT("\t... Initialize Scheduler\n");
     scheduler_t* scheduler = new scheduler_t;
-    scheduler->Initialize(options->get_gpu_count());
+    scheduler->Initialize(options->get_node_count());
     scheduler->Schedule(tensor_blocks, optimizer);
 
   } else {
