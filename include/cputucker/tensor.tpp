@@ -158,17 +158,19 @@ void Tensor<TENSOR_TEMPLATE_ARGS>::_RefreshDims() {
 TENSOR_TEMPLATE
 void Tensor<TENSOR_TEMPLATE_ARGS>::ToString() {
   for (unsigned short axis = 0; axis < order; ++axis) {
-    printf("Max. dim[%d] = %lu\n", axis, dims[axis]);
+    std::cout << "Max. dim[" << axis << "] = " << dims[axis] << std::endl;
   }
   printf("# nnzs: %lu\n", nnz_count);
   PrintLine();
   for (unsigned short axis = 0; axis < order; ++axis) {
-    printf("Partition dim[%d] = %lu\n", axis, partition_dims[axis]);
+    std::cout << "Partition dim[" << axis << "]" << partition_dims[axis]
+              << std::endl;
   }
   printf("# blocks: %lu\n", block_count);
   PrintLine();
   for (unsigned short axis = 0; axis < order; ++axis) {
-    printf("Block dim[%d] = %lu\n", axis, block_dims[axis]);
+    std::cout << "Block dim[" << axis << "] = " << block_dims[axis]
+              << std::endl;
   }
   printf("# empty blocks: %lu / %lu\n", this->_empty_block_count, block_count);
 }

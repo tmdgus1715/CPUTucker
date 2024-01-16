@@ -18,8 +18,7 @@ Block<BLOCK_TEMPLATE_ARGS>::Block(uint64_t new_block_id,
 BLOCK_TEMPLATE
 Block<BLOCK_TEMPLATE_ARGS>::Block(uint64_t new_block_id,
                                   index_t *new_block_coord,
-                                  unsigned short new_order, 
-                                  index_t *new_dims,
+                                  unsigned short new_order, index_t *new_dims,
                                   uint64_t new_nnz_count) {
   if (new_order < 1) {
     throw std::runtime_error(
@@ -56,18 +55,15 @@ Block<BLOCK_TEMPLATE_ARGS>::~Block() {
   nnz_count = 0;
 }
 
-
 BLOCK_TEMPLATE
-void Block<BLOCK_TEMPLATE_ARGS>::InsertNonzero(uint64_t pos,
-                                                index_t *new_coord,
-                                                value_t new_value) {
+void Block<BLOCK_TEMPLATE_ARGS>::InsertNonzero(uint64_t pos, index_t *new_coord,
+                                               value_t new_value) {
   assert(pos <= nnz_count);
   for (unsigned short axis = 0; axis < order; ++axis) {
     indices[axis][nnz_count - pos] = new_coord[axis] - this->_base_dims[axis];
   }
   values[nnz_count - pos] = new_value;
 }
-
 
 BLOCK_TEMPLATE
 void Block<BLOCK_TEMPLATE_ARGS>::AssignIndicesToEachMode() {
@@ -165,7 +161,7 @@ void Block<BLOCK_TEMPLATE_ARGS>::ToString() {
 
   printf("Block coord: ");
   for (axis = 0; axis < order; ++axis) {
-    printf("[%lu]", this->_block_coord[axis]);
+    std::cout << "[" << this->_block_coord[axis] << "]";
   }
   printf("\n");
 
@@ -173,7 +169,7 @@ void Block<BLOCK_TEMPLATE_ARGS>::ToString() {
 
   printf("Block dims: ");
   for (axis = 0; axis < order; ++axis) {
-    printf("%lu", dims[axis]);
+    std::cout << dims[axis] << " ";
     if (axis < order - 1) {
       printf(" X ");
     } else {
@@ -192,7 +188,6 @@ void Block<BLOCK_TEMPLATE_ARGS>::set_dims(index_t *new_dims) {
     this->_base_dims[axis] = dims[axis] * this->_block_coord[axis];
   }
 }
-
 
 }  // namespace cputucker
 }  // namespace supertensor

@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "common/human_readable.hpp"
+#include "common/size.hpp"
 #include "cputucker/cmdline_opts.hpp"
 #include "cputucker/helper.hpp"
 #include "cputucker/optimizer.hpp"
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
     tensor_manager->ParseFromFile(options->get_input_path(), &input_tensor);
     // input_tensor->ToString();
 
-    size_t avail_gpu_mem = 1024 * 1024 * 1024 * 4;  // 4GB
+    size_t avail_gpu_mem = common::GiB<size_t>(4);  // 4GiB
     // Find optimal partition parameters from optimizer
     optimizer_t* optimizer = new optimizer_t;
     optimizer->Initialize(options->get_gpu_count(), options->get_rank(),

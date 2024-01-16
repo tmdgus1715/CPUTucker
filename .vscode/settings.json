@@ -7,5 +7,10 @@
     "nnzs",
     "nonzeros",
     "supertensor"
-  ]
+  ],
+  "files.associations": {
+    "tensor.hpp": "c",
+    "block.hpp": "c",
+    "*.tpp": "cpp"
+  }
 }
