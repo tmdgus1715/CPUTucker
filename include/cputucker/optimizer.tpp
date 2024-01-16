@@ -9,11 +9,10 @@ namespace supertensor {
 namespace cputucker {
 
 OPTIMIZER_TEMPLATE
-void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::Initialize(
-    unsigned short new_node_count, unsigned int new_rank, uint64_t new_mem_size,
-    tensor_t* new_data) {
+void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::Initialize(unsigned int new_rank, 
+                                                    uint64_t new_mem_size,
+                                                    tensor_t* new_data) {
   rank = new_rank;
-  node_count = new_node_count;
   mem_size = new_mem_size;
   this->_data = new_data;
 }
@@ -43,7 +42,7 @@ Optimizer<OPTIMIZER_TEMPLATE_ARGS>::FindPartitionParms() {
 
   for (unsigned short axis = 0; axis < order; ++axis) {
     block_dims[axis] = dims[axis];
-    partition_dims[axis] = 1;
+    partition_dims[axis] = 3;
   }
   this->_RefreshBlockDims();
 
@@ -58,7 +57,7 @@ void Optimizer<OPTIMIZER_TEMPLATE_ARGS>::ToString() {
 
   unsigned short order = this->_data->order;
   for (int axis = 0; axis < order; ++axis) {
-    printf("Partition dim[%d] = %lu\n", axis, partition_dims[axis]);
+    std::cout << "Partition dim [" << axis << "] = " << partition_dims[axis] << std::endl;
   }
   printf("The number of blocks: %lu\n", block_count);
   printf("Avg. nonzeros per a block: %lu\n", avg_nnz_count_per_block);

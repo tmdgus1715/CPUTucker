@@ -21,8 +21,9 @@ class Optimizer {
  public:
   Optimizer() {}
   ~Optimizer() {}
-  void Initialize(unsigned short new_node_count, unsigned int new_rank,
-                  uint64_t new_mem_size, tensor_t* new_data);
+  void Initialize(unsigned int new_rank,
+                  uint64_t new_mem_size, 
+                  tensor_t* new_data);
 
   size_t GetAllDataSize();
   index_t* FindPartitionParms();
@@ -34,7 +35,6 @@ class Optimizer {
 
   /* Adjusting block dimensions using partition dimensions */
   void _RefreshBlockDims();
-  void _AvailableNonzeroCountPerTask();
 
   /* Get data size for a CUDA execution sequence*/
   size_t _get_data_size_input_tensor();
@@ -50,7 +50,6 @@ class Optimizer {
 
  public:
   unsigned int rank;
-  unsigned short node_count;
   uint64_t mem_size;
 
   index_t* block_dims;
@@ -58,7 +57,6 @@ class Optimizer {
   uint64_t block_count;
 
   uint64_t avg_nnz_count_per_block;  // (estimated) nonzeros per a task
-  uint64_t avail_nnz_count_per_task;
 
  private:
   tensor_t* _data;

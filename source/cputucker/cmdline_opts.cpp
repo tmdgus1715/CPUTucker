@@ -10,7 +10,7 @@ namespace supertensor {
 namespace cputucker {
 
 CommandLineOptions::CommandLineOptions()
-    : _input_path(""), _order(3), _rank(10), _node_count(1) {
+    : _input_path(""), _order(3), _rank(10) {
   Initialize();
 }
 
@@ -23,12 +23,10 @@ CommandLineOptions::~CommandLineOptions() {}
 void CommandLineOptions::Initialize() {
   po::options_description options("Program Options");
 
-  options.add_options()("help,h", "Display help menu.")(
-      "input,i", po::value<std::string>(&this->_input_path),
-      "Input tensor path")("order,o", po::value<int>(&this->_order), "Order")(
-      "rank,r", po::value<int>(&this->_rank)->default_value(10), "Rank")(
-      "nodes,n", po::value<int>(&this->_node_count)->default_value(1),
-      "The number of nodes");
+  options.add_options()("help,h", "Display help menu.")
+                        ("input,i", po::value<std::string>(&this->_input_path), "Input tensor path")
+                        ("order,o", po::value<int>(&this->_order), "Order")
+                        ("rank,r", po::value<int>(&this->_rank)->default_value(10), "Rank");
 
   this->_options.add(options);
 }
@@ -81,11 +79,6 @@ CommandLineOptions::ReturnStatus CommandLineOptions::Parse(int argc,
                 << this->_rank << std::endl;
     }
 
-    // We can check if the number of nodes is defaulted
-    if (!var_map["nodes"].defaulted()) {
-      std::cout << "[WARNING] Default value for Node count overwritten to "
-                << this->_node_count << std::endl;
-    }
 
   } catch (std::exception &e) {
     std::cout << "[ERROR] Parsing error : " << e.what() << std::endl;

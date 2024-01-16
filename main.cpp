@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     using tensor_t = Tensor<block_t>;
     using tensor_manager_t = TensorManager<tensor_t>;
     using optimizer_t = Optimizer<tensor_t>;
-    using scheduler_t = Scheduler<tensor_t, optimizer_t>;
+    using scheduler_t = Scheduler<tensor_t>;
 
     bool is_double = std::is_same<value_t, double>::value;
     if (is_double) {
@@ -44,20 +44,20 @@ int main(int argc, char* argv[]) {
     size_t avail_mem_size = common::GiB<size_t>(4);  // 4GiB
     // Find optimal partition parameters from optimizer
     optimizer_t* optimizer = new optimizer_t;
-    optimizer->Initialize(options->get_node_count(), options->get_rank(), avail_mem_size, input_tensor);
+    optimizer->Initialize(options->get_rank(), avail_mem_size, input_tensor);
     index_t* partition_dims = optimizer->FindPartitionParms();
+    optimizer->ToString();
 
     // Create tensor blocks ( = sub-tensors )
     tensor_t* tensor_blocks = new tensor_t(input_tensor);
-    tensor_manager->CreateTensorBlocks<optimizer_t>(&input_tensor,
-                                                    &tensor_blocks, optimizer);
+    tensor_manager->CreateTensorBlocks<optimizer_t>(&input_tensor, &tensor_blocks, optimizer);
     tensor_blocks->ToString();
 
     // TODO block scheduling
     MYPRINT("\t... Initialize Scheduler\n");
     scheduler_t* scheduler = new scheduler_t;
-    scheduler->Initialize(options->get_node_count());
-    scheduler->Schedule(tensor_blocks, optimizer);
+    scheduler->Initialize();
+    scheduler->Schedule(tensor_blocks);
 
   } else {
     std::cout << "ERROR - problem with options." << std::endl;
