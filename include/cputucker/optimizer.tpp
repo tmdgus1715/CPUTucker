@@ -42,7 +42,7 @@ Optimizer<OPTIMIZER_TEMPLATE_ARGS>::FindPartitionParms() {
 
   for (unsigned short axis = 0; axis < order; ++axis) {
     block_dims[axis] = dims[axis];
-    partition_dims[axis] = 3;
+    partition_dims[axis] = 1;
   }
   this->_RefreshBlockDims();
 

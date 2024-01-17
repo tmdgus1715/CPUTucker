@@ -9,9 +9,9 @@
 namespace supertensor {
 namespace cputucker {
 
-template <typename TensorType, typename MatrixType, typename DeltaType, typename SchedulerType>
+template <typename TensorType, typename ValueType, typename SchedulerType>
 void ComputingDelta(TensorType *tensor, TensorType *core_tensor,
-                    MatrixType ***factor_matrices, DeltaType **delta,
+                    ValueType ***factor_matrices, ValueType **delta,
                     int curr_factor_id, int rank, SchedulerType *scheduler) {
 
   using tensor_t = TensorType;
@@ -26,40 +26,42 @@ void ComputingDelta(TensorType *tensor, TensorType *core_tensor,
   // Computing Blocks
   auto tasks = scheduler->tasks;
   printf("\t... Computing delta\n");
-  printf("Size of tasks: %lu\n", tasks.size());
 
   for (uint64_t iter = 0; iter < tasks.size(); ++iter) {
     uint64_t block_id = tasks[iter].block_id;
     uint64_t nnz_count = tasks[iter].nnz_count;
-
-    tasks[iter].ToString();
     
     block_t *curr_block = tensor->blocks[block_id];
     index_t *curr_block_coord = curr_block->get_block_coord();
-    curr_block->ToString();
-    
 
-#pragma omp parallel for schedule(dynamic)  // schedule(auto)
-        for (uint64_t nnz = 0; nnz < nnz_count; ++nnz) {
-      index_t nnz_idx[cputucker::constants::kMaxOrder];
+    index_t** core_indices = core_tensor->blocks[0]->indices;
+    value_t* core_values = core_tensor->blocks[0]->values;
+
+#pragma omp parallel for schedule(static)
+    for (uint64_t nnz = 0; nnz < nnz_count; ++nnz) {
+      index_t* nnz_idx = cputucker::allocate<index_t>(3);
       for (int axis = 0; axis < order; ++axis) {
         nnz_idx[axis] = curr_block->indices[axis][nnz];
       }
 
       for(int r = 0; r < rank; ++r){
-        delta[block_id][nnz + r] = 0.0f;
+        delta[block_id][nnz * rank + r] = 0.0f;
       }
 
       for(uint64_t co_nnz = 0; co_nnz < core_tensor->nnz_count; ++co_nnz) {
-        index_t delta_col = core_tensor->blocks[0]->indices[curr_factor_id][co_nnz];
-        value_t beta = core_tensor->blocks[0]->values[co_nnz];
+        index_t delta_col = core_indices[curr_factor_id][co_nnz];
+        value_t beta = core_values[co_nnz];
         for(int axis = 0; axis < order; ++axis) {
           if(axis != curr_factor_id) {
-            beta *= factor_matrices[axis][curr_block_coord[axis]][nnz_idx[axis] * rank + co_nnz];
+            // index_t part_id = curr_block_coord[axis];
+            // index_t pos = nnz_idx[axis] * rank + core_indices[axis][co_nnz];
+            // beta *= factor_matrices[axis][part_id][pos];
+            beta *= factor_matrices[axis][curr_block_coord[axis]][nnz_idx[axis] * rank + core_indices[axis][co_nnz]];
           }
         }
         delta[block_id][nnz * rank + delta_col] += beta;
       }
+      cputucker::deallocate(nnz_idx);
     }
 
   }  // block_count loop

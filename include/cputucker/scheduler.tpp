@@ -37,11 +37,6 @@ void Scheduler<SCHEDULER_TEMPLATE_ARGS>::Schedule(tensor_t *tensor) {
   this->task_count = 0;
   for (uint64_t block_id = 0; block_id < tensor->block_count; ++block_id) {
     tasks.push_back(Task(sort_block_id[block_id], sort_nnz_count[sort_block_id[block_id]]));
-
-    printf("[%lu] block has %lu nnzs.\n", sort_block_id[block_id], sort_nnz_count[sort_block_id[block_id]]);
-
-    tasks[this->task_count].ToString();
-
     ++this->task_count;
   }
 

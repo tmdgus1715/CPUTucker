@@ -34,25 +34,29 @@ void ComputingReconstruction(TensorType *tensor, TensorType *core_tensor,
     block_t *curr_block = tensor->blocks[block_id];
     index_t *curr_block_coord = curr_block->get_block_coord();
 
-    #pragma omp parallel for schedule(static)
+    index_t **core_indices = core_tensor->blocks[0]->indices;
+    value_t *core_values = core_tensor->blocks[0]->values;
+
+#pragma omp parallel for schedule(static)
     for (uint64_t nnz = 0; nnz < nnz_count; ++nnz) {
       double ans = 0.0f;
-      index_t nnz_idx[cputucker::constants::kMaxOrder];
+      index_t *nnz_idx = cputucker::allocate<index_t>(3);
       for (int axis = 0; axis < order; ++axis) {
         nnz_idx[axis] = curr_block->indices[axis][nnz];
       }
 
       for (uint64_t co_nnz = 0; co_nnz < core_tensor->nnz_count; ++co_nnz) {
-        value_t temp = core_tensor->blocks[0]->values[co_nnz];
+        value_t temp = core_values[co_nnz];
         for (int axis = 0; axis < order; ++axis) {
-          index_t co_idx = core_tensor->blocks[0]->indices[axis][co_nnz];
-          temp *= factor_matrices[axis][curr_block_coord[axis]][nnz_idx[axis] * rank + co_idx];
+          index_t part_id = curr_block_coord[axis];
+          index_t pos = nnz_idx[axis] * rank + core_indices[axis][co_nnz];
+
+          temp *= factor_matrices[axis][part_id][pos];
         }
         ans += temp;
       }
-      error_T[block_id][nnz] += ans;
+      error_T[block_id][nnz] = ans;
     }
-
   }  // task.size()
 
 }
@@ -82,10 +86,12 @@ void Reconstruction(TensorType *tensor, TensorType *core_tensor,
   value_t Error = 0.0f;
 
   for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
-    block_t *curr_block = tensor->blocks[block_id];
+    value_t *curr_block_values = tensor->blocks[block_id]->values;
+    value_t *curr_block_error = error_T[block_id];
+    uint64_t curr_block_nnz_count = tensor->blocks[block_id]->nnz_count;
 #pragma omp parallel for schedule(static) reduction(+ : Error)
-    for (uint64_t nnz = 0; nnz < curr_block->nnz_count; ++nnz) {
-      value_t err_tmp = curr_block->values[nnz] - error_T[block_id][nnz];
+    for (uint64_t nnz = 0; nnz < curr_block_nnz_count; ++nnz) {
+      value_t err_tmp = curr_block_values[nnz] - curr_block_error[nnz];
       Error += err_tmp * err_tmp;
     }
   }

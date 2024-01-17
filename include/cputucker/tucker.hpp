@@ -14,6 +14,11 @@ namespace supertensor {
 namespace cputucker {
 template <typename TensorType, typename OptimizerType, typename SchedulerType>
 void TuckerDecomposition(TensorType *tensor, OptimizerType *optimizer,  SchedulerType *scheduler) {
+
+  PrintLine();
+  MYPRINT("Tucker Decomposition\n");
+  PrintLine();
+
   using tensor_t = TensorType;
   using index_t = typename tensor_t::index_t;
   using value_t = typename tensor_t::value_t;
@@ -28,10 +33,9 @@ void TuckerDecomposition(TensorType *tensor, OptimizerType *optimizer,  Schedule
 
   int rank = optimizer->rank;
 
-  MYPRINT("... Ready to fill in the factor matrices and the core tensor\n");
   value_t **factor_matrices[cputucker::constants::kMaxOrder];
 
-  printf("\t... Make the factor matrices\n");
+  printf("\t Initializing factor matrices, core tensor, and intermediate data(delta, B, C, and error_T)\n");
   // Allocate sub_factor matrices
   for (int axis = 0; axis < order; ++axis) {
     factor_matrices[axis] = cputucker::allocate<value_t *>(sizeof(value_t *) * partition_dims[axis]);
@@ -43,7 +47,6 @@ void TuckerDecomposition(TensorType *tensor, OptimizerType *optimizer,  Schedule
 
   // Initialize sub_factor matrices
   for (int axis = 0; axis < order; ++axis) {
-    printf("\t\t... Fill the factor matrix [%d]\n", axis);
     index_t sub_factor_row = block_dims[axis];
     for (index_t part = 0; part < partition_dims[axis]; ++part) {
       if (part + 1 == partition_dims[axis]) {
@@ -59,7 +62,6 @@ void TuckerDecomposition(TensorType *tensor, OptimizerType *optimizer,  Schedule
   }
 
   // Core tensor
-  printf("\t... Make the core tensor\n");
   tensor_t *core_tensor = new tensor_t(order);
   index_t *core_dims = cputucker::allocate<index_t>(order);
   index_t *core_part_dims = cputucker::allocate<index_t>(order);
@@ -74,11 +76,11 @@ void TuckerDecomposition(TensorType *tensor, OptimizerType *optimizer,  Schedule
   core_tensor->set_nnz_count(core_nnz_count);
   core_tensor->MakeBlocks(1, &core_nnz_count);
 
-  block_t *curr_block = core_tensor->blocks[0];
+  block_t *curr_core_tensor_block = core_tensor->blocks[0];
 
   // #pragma omp parallel for
   for (uint64_t i = 0; i < core_nnz_count; ++i) {
-    curr_block->values[i] = cputucker::frand<double>(0, 1);
+    curr_core_tensor_block->values[i] = cputucker::frand<double>(0, 1);
     index_t mult = 1;
     for (short axis = order; --axis >= 0;) {
       index_t idx = 0;
@@ -89,13 +91,12 @@ void TuckerDecomposition(TensorType *tensor, OptimizerType *optimizer,  Schedule
       } else {
         idx = (i / mult) % core_dims[axis];
       }
-      curr_block->indices[axis][i] = idx;
+      curr_core_tensor_block->indices[axis][i] = idx;
       mult *= core_dims[axis];
     }
     assert(mult == core_nnz_count);
   }
 
-  printf("\t... Initialize the intermediate data (delta, B and C, errorT)\n");
   const uint64_t block_count = tensor->block_count;
   const index_t max_block_dim = tensor->get_max_block_dim();
   const index_t max_partition_dim = tensor->get_max_partition_dim();

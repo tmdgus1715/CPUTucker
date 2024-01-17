@@ -198,6 +198,9 @@ bool TensorManager<TENSOR_MANAGER_ARGS>::_ReadData(const char *buffer,
 TENSOR_MANAGER_TEMPLATE
 template<typename OptimizerType>
 void TensorManager<TENSOR_MANAGER_ARGS>::CreateTensorBlocks(tensor_t** src, tensor_t** dest, OptimizerType* optimizer) {
+  PrintLine();
+  MYPRINT("CreateTensorBlocks\n");
+  PrintLine();
 
   printf("... 1) Creating tensor blocks\n");
   const unsigned short order = (*src)->order;

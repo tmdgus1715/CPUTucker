@@ -54,9 +54,11 @@ int main(int argc, char* argv[]) {
     tensor_manager->CreateTensorBlocks<optimizer_t>(&input_tensor, &tensor_blocks, optimizer);
     tensor_blocks->ToString();
 
-    for(uint64_t bid = 0; bid < tensor_blocks->block_count; ++bid) {
-      tensor_blocks->blocks[bid]->ToString();
-    }
+    delete input_tensor;
+
+    // for(uint64_t bid = 0; bid < tensor_blocks->block_count; ++bid) {
+    //   tensor_blocks->blocks[bid]->ToString();
+    // }
 
     // TODO block scheduling
     MYPRINT("\t... Initialize Scheduler\n");
@@ -64,7 +66,7 @@ int main(int argc, char* argv[]) {
     scheduler->Initialize();
     scheduler->Schedule(tensor_blocks);
 
-    TuckerDecomposition<tensor_t, optimizer_t, scheduler_t>(input_tensor, optimizer, scheduler);
+    TuckerDecomposition<tensor_t, optimizer_t, scheduler_t>(tensor_blocks, optimizer, scheduler);
 
   } else {
     std::cout << "ERROR - problem with options." << std::endl;

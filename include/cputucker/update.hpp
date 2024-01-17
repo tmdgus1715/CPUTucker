@@ -51,7 +51,7 @@ void ComputingBC(TensorType *tensor, DeltaType **delta, MatrixType **B,
   index_t ii, jj;
   uint64_t kk;
   for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
-    std::cout << "block [" << block_id << "] is being processed" << std::endl;
+    // std::cout << "block [" << block_id << "] is being processed" << std::endl;
     block_t *curr_block = tensor->blocks[block_id];
     index_t *curr_block_coord = curr_block->get_block_coord();
     index_t part_id = curr_block_coord[curr_factor_id];
@@ -103,7 +103,9 @@ void UpdateFactorMatrices(TensorType *tensor, TensorType *core_tensor,
     MYPRINT("[ Update factor matrix %d ]\n", curr_factor_id);
 
     double delta_time = omp_get_wtime();
-    ComputingDelta(tensor, core_tensor, factor_matrices, delta, curr_factor_id, rank, scheduler);
+    ComputingDelta<tensor_t, ValueType, SchedulerType>(
+        tensor, core_tensor, factor_matrices, delta, curr_factor_id, rank,
+        scheduler);
     printf("\t- Elapsed time for Computing Delta: %lf\n", omp_get_wtime() - delta_time);
 
     double bc_time = omp_get_wtime();
