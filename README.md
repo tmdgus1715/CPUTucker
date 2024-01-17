@@ -2,11 +2,11 @@
 
 For each application, the folders are:
 - **include**: All project header files. All third-party header files that do not exist under /usr/local/include are also placed here.
-- **lib**: Any libs that get compiled by the project, third-party or any needed in development.
+- **lib**: Any libs that get compiled by the project, third-party, or any needed in development.
 - **source**: The application's source files.
 
 ## Usage
-CPUTucker requires OpenMP libraries.
+CPUTucker requires OpenMP library.
 
 **Input tensor must follow tab- or space-separated format and base-1 indexing.**
 
