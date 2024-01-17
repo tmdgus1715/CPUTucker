@@ -34,18 +34,18 @@ void ComputingReconstruction(TensorType *tensor, TensorType *core_tensor,
     block_t *curr_block = tensor->blocks[block_id];
     index_t *curr_block_coord = curr_block->get_block_coord();
 
-    #pragma omp parallel for shcedule(static)
-    for(uint64_t nnz = 0; nnz < nnz_cout; ++nnz) {
+    #pragma omp parallel for schedule(static)
+    for (uint64_t nnz = 0; nnz < nnz_count; ++nnz) {
       double ans = 0.0f;
-      value_t nnz_idx[cputucker::constants::kMaxOrder];
+      index_t nnz_idx[cputucker::constants::kMaxOrder];
       for (int axis = 0; axis < order; ++axis) {
         nnz_idx[axis] = curr_block->indices[axis][nnz];
       }
 
       for (uint64_t co_nnz = 0; co_nnz < core_tensor->nnz_count; ++co_nnz) {
-        value_t temp = core_tensor->values[co_nnz];
+        value_t temp = core_tensor->blocks[0]->values[co_nnz];
         for (int axis = 0; axis < order; ++axis) {
-          index_t co_idx = core_tensor->indices[axis][co_nnz];
+          index_t co_idx = core_tensor->blocks[0]->indices[axis][co_nnz];
           temp *= factor_matrices[axis][curr_block_coord[axis]][nnz_idx[axis] * rank + co_idx];
         }
         ans += temp;
@@ -83,7 +83,7 @@ void Reconstruction(TensorType *tensor, TensorType *core_tensor,
 
   for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
     block_t *curr_block = tensor->blocks[block_id];
-#pragma omp prallel for schedule(static) reduction(+ : Error)
+#pragma omp parallel for schedule(static) reduction(+ : Error)
     for (uint64_t nnz = 0; nnz < curr_block->nnz_count; ++nnz) {
       value_t err_tmp = curr_block->values[nnz] - error_T[block_id][nnz];
       Error += err_tmp * err_tmp;

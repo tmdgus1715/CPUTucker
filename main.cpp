@@ -9,6 +9,7 @@
 #include "cputucker/scheduler.hpp"
 #include "cputucker/tensor.hpp"
 #include "cputucker/tensor_manager.hpp"
+#include "cputucker/tucker.hpp"
 
 int main(int argc, char* argv[]) {
   using namespace supertensor::cputucker;
@@ -53,11 +54,17 @@ int main(int argc, char* argv[]) {
     tensor_manager->CreateTensorBlocks<optimizer_t>(&input_tensor, &tensor_blocks, optimizer);
     tensor_blocks->ToString();
 
+    for(uint64_t bid = 0; bid < tensor_blocks->block_count; ++bid) {
+      tensor_blocks->blocks[bid]->ToString();
+    }
+
     // TODO block scheduling
     MYPRINT("\t... Initialize Scheduler\n");
     scheduler_t* scheduler = new scheduler_t;
     scheduler->Initialize();
     scheduler->Schedule(tensor_blocks);
+
+    TuckerDecomposition<tensor_t, optimizer_t, scheduler_t>(input_tensor, optimizer, scheduler);
 
   } else {
     std::cout << "ERROR - problem with options." << std::endl;

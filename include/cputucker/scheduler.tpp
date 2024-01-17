@@ -34,20 +34,17 @@ void Scheduler<SCHEDULER_TEMPLATE_ARGS>::Schedule(tensor_t *tensor) {
               return (sort_nnz_count[a] < sort_nnz_count[b]);
             });
 
-  for (uint64_t block_id = 0; block_id < tensor->block_count; ++block_id) {
-    printf("[%lu] block has %lu nnzs.\n", sort_block_id[block_id],
-           sort_nnz_count[sort_block_id[block_id]]);
-  }
-
-  // Dimension partitioning
   this->task_count = 0;
+  for (uint64_t block_id = 0; block_id < tensor->block_count; ++block_id) {
+    tasks.push_back(Task(sort_block_id[block_id], sort_nnz_count[sort_block_id[block_id]]));
 
-  for (uint64_t i = 0; i < tensor->block_count; ++i) {
+    printf("[%lu] block has %lu nnzs.\n", sort_block_id[block_id], sort_nnz_count[sort_block_id[block_id]]);
 
-    uint64_t block_id = sort_block_id[i];
-    tasks.push_back(Task(block_id, tensor->blocks[block_id]->nnz_count));
+    tasks[this->task_count].ToString();
+
     ++this->task_count;
   }
+
 }
 
 }  // namespace cputucker

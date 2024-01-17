@@ -72,11 +72,11 @@ void ComputingBC(TensorType *tensor, DeltaType **delta, MatrixType **B,
         uint64_t pos_C = row * rank;
 
         for (ii = 0; ii < rank; ++ii) {
-          value_t cach = delta[block_id][pos_delta + ii];
+          value_t cache = delta[block_id][pos_delta + ii];
           for (jj = 0; jj < rank; ++jj) {
-            B[part_id][pos_B++] += cach * delta[block_id][pos_delta + jj];
+            B[part_id][pos_B++] += cache * delta[block_id][pos_delta + jj];
           }
-          C[part_id][pos_C++] += cach * curr_entry_val;
+          C[part_id][pos_C++] += cache * curr_entry_val;
         }
       }
     }

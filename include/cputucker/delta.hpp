@@ -25,17 +25,23 @@ void ComputingDelta(TensorType *tensor, TensorType *core_tensor,
 
   // Computing Blocks
   auto tasks = scheduler->tasks;
+  printf("\t... Computing delta\n");
+  printf("Size of tasks: %lu\n", tasks.size());
 
   for (uint64_t iter = 0; iter < tasks.size(); ++iter) {
     uint64_t block_id = tasks[iter].block_id;
     uint64_t nnz_count = tasks[iter].nnz_count;
 
+    tasks[iter].ToString();
+    
     block_t *curr_block = tensor->blocks[block_id];
     index_t *curr_block_coord = curr_block->get_block_coord();
+    curr_block->ToString();
+    
 
-    #pragma omp parallel for schedule(dynamic)  // schedule(auto)
-    for(uint64_t nnz = 0; nnz < nnz_count; ++nnz) {
-      value_t nnz_idx[cputucker::constants::kMaxOrder];
+#pragma omp parallel for schedule(dynamic)  // schedule(auto)
+        for (uint64_t nnz = 0; nnz < nnz_count; ++nnz) {
+      index_t nnz_idx[cputucker::constants::kMaxOrder];
       for (int axis = 0; axis < order; ++axis) {
         nnz_idx[axis] = curr_block->indices[axis][nnz];
       }
@@ -45,8 +51,8 @@ void ComputingDelta(TensorType *tensor, TensorType *core_tensor,
       }
 
       for(uint64_t co_nnz = 0; co_nnz < core_tensor->nnz_count; ++co_nnz) {
-        index_t delta_col = core_tensor->indices[curr_factor_id][co_nnz];
-        value_t beta = core_tensor->values[co_nnz];
+        index_t delta_col = core_tensor->blocks[0]->indices[curr_factor_id][co_nnz];
+        value_t beta = core_tensor->blocks[0]->values[co_nnz];
         for(int axis = 0; axis < order; ++axis) {
           if(axis != curr_factor_id) {
             beta *= factor_matrices[axis][curr_block_coord[axis]][nnz_idx[axis] * rank + co_nnz];
@@ -54,7 +60,7 @@ void ComputingDelta(TensorType *tensor, TensorType *core_tensor,
         }
         delta[block_id][nnz * rank + delta_col] += beta;
       }
-    }   
+    }
 
   }  // block_count loop
 }

@@ -5,6 +5,10 @@
 
 #include "cputucker/constants.hpp"
 #include "cputucker/scheduler.hpp"
+#include "cputucker/helper.hpp"
+#include "cputucker/update.hpp"
+#include "cputucker/reconstruction.hpp"
+
 
 namespace supertensor {
 namespace cputucker {

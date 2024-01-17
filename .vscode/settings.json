@@ -2,11 +2,15 @@
   "cSpell.words": [
     "BKMGTPE",
     "cputucker",
+    "Eigen",
     "frand",
+    "itertime",
     "MYPRINT",
     "nnzs",
     "nonzeros",
-    "supertensor"
+    "steptime",
+    "supertensor",
+    "wtime"
   ],
   "files.associations": {
     "tensor.hpp": "c",
