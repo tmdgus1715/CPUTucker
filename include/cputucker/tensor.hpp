@@ -37,6 +37,7 @@ class Tensor {
   void set_dims(index_t *new_dims);
   void set_partition_dims(const index_t *new_partition_dims);
   void set_nnz_count(uint64_t new_nnz_count) { nnz_count = new_nnz_count; }
+  void set_nnz_count_in_block(uint64_t new_max_nnz_count_in_block) { this->_max_nnz_count_in_block = new_max_nnz_count_in_block; }
 
   /* Getter */
   index_t get_max_partition_dim() { return this->_max_partition_dim; }

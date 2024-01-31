@@ -42,18 +42,17 @@ Block<BLOCK_TEMPLATE_ARGS>::Block(uint64_t new_block_id,
 
 BLOCK_TEMPLATE
 Block<BLOCK_TEMPLATE_ARGS>::~Block() {
-  cputucker::deallocate<index_t>(dims);
-  cputucker::deallocate<index_t>(this->_base_dims);
-  cputucker::deallocate<index_t>(this->_block_coord);
-  for (unsigned short axis = 0; axis < order; ++axis) {
-    cputucker::deallocate<index_t>(indices[axis]);
-    cputucker::deallocate<uint64_t>(count_nnz[axis]);
-    cputucker::deallocate<index_t>(where_nnz[axis]);
+  if (_is_allocated) {
+    cputucker::deallocate<index_t>(dims);
+    cputucker::deallocate<index_t>(this->_base_dims);
+    cputucker::deallocate<index_t>(this->_block_coord);
+    delete[] this->buffer_ptr;
   }
-  cputucker::deallocate<value_t>(values);
+
   this->_is_allocated = false;
   nnz_count = 0;
 }
+
 
 BLOCK_TEMPLATE
 void Block<BLOCK_TEMPLATE_ARGS>::InsertNonzero(uint64_t pos, index_t *new_coord,

@@ -1,7 +1,9 @@
 
 #include <omp.h>
 
+#include <cstdint>
 #include "cputucker/tensor.hpp"
+
 namespace supertensor {
 namespace cputucker {
 TENSOR_TEMPLATE
@@ -43,7 +45,37 @@ TENSOR_TEMPLATE
 Tensor<TENSOR_TEMPLATE_ARGS>::Tensor() : Tensor(0) {}
 
 TENSOR_TEMPLATE
-Tensor<TENSOR_TEMPLATE_ARGS>::~Tensor() {}
+Tensor<TENSOR_TEMPLATE_ARGS>::~Tensor() {
+  // dims 배열 해제
+    if (dims) {
+        delete[] dims;
+        dims = nullptr;
+    }
+
+    // partition_dims 배열 해제
+    if (partition_dims) {
+        delete[] partition_dims;
+        partition_dims = nullptr;
+    }
+
+    // block_dims 배열 해제
+    if (block_dims) {
+        delete[] block_dims;
+        block_dims = nullptr;
+    }
+
+    // blocks 배열 해제
+    if (blocks) {
+        for (uint64_t i = 0; i < block_count; ++i) {
+            if (blocks[i]) {
+                delete blocks[i];
+                blocks[i] = nullptr;
+            }
+        }
+        delete[] blocks;
+        blocks = nullptr;
+    }
+}
 
 TENSOR_TEMPLATE
 void Tensor<TENSOR_TEMPLATE_ARGS>::MakeBlocks(uint64_t new_block_count,

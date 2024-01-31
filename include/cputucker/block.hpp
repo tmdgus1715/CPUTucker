@@ -50,10 +50,11 @@ public:
   unsigned short order;
   index_t *dims;
   uint64_t nnz_count;
-
+  
   /* Data */
   value_t *values;
   index_t *indices[constants::kMaxOrder];
+  char* buffer_ptr;
 
   /* Metadata for each mode */
   index_t *where_nnz[constants::kMaxOrder];

@@ -9,10 +9,10 @@
 namespace supertensor {
 namespace cputucker {
 
-template <typename TensorType, typename MatrixType, typename ErrorType, typename SchedulerType>
+template <typename TensorType, typename MatrixType, typename ErrorType, typename SchedulerType, typename TensorManagerType>
 void ComputingReconstruction(TensorType *tensor, TensorType *core_tensor,
                              MatrixType ***factor_matrices, ErrorType **error_T,
-                             int rank, SchedulerType *scheduler) {
+                             int rank, SchedulerType *scheduler, TensorManagerType *manager) {
   using tensor_t = TensorType;
   using block_t = typename tensor_t::block_t;
   using index_t = typename tensor_t::index_t;
@@ -31,7 +31,7 @@ void ComputingReconstruction(TensorType *tensor, TensorType *core_tensor,
     uint64_t block_id = tasks[iter].block_id;
     uint64_t nnz_count = tasks[iter].nnz_count;
 
-    block_t *curr_block = tensor->blocks[block_id];
+    block_t *curr_block = (block_t *)manager->ReadBlockFromFile(block_id);
     index_t *curr_block_coord = curr_block->get_block_coord();
 
     index_t **core_indices = core_tensor->blocks[0]->indices;
@@ -57,14 +57,15 @@ void ComputingReconstruction(TensorType *tensor, TensorType *core_tensor,
       }
       error_T[block_id][nnz] = ans;
     }
+    delete curr_block;
   }  // task.size()
 
 }
 
-template <typename TensorType, typename MatrixType, typename ErrorType, typename SchedulerType>
+template <typename TensorType, typename MatrixType, typename ErrorType, typename SchedulerType, typename TensorManagerType>
 void Reconstruction(TensorType *tensor, TensorType *core_tensor,
                     MatrixType ***factor_matrices, double *fit,
-                    ErrorType **error_T, int rank,SchedulerType *scheduler) {
+                    ErrorType **error_T, int rank, SchedulerType *scheduler, TensorManagerType *manager) {
   MYPRINT("[ Reconstruction ]\n");
   using tensor_t = TensorType;
   using block_t = typename tensor_t::block_t;
@@ -81,19 +82,21 @@ void Reconstruction(TensorType *tensor, TensorType *core_tensor,
 
   double recons_time = omp_get_wtime();
 
-  ComputingReconstruction(tensor, core_tensor, factor_matrices, error_T, rank, scheduler);
+  ComputingReconstruction(tensor, core_tensor, factor_matrices, error_T, rank, scheduler, manager);
 
   value_t Error = 0.0f;
 
   for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
-    value_t *curr_block_values = tensor->blocks[block_id]->values;
+    block_t *curr_block = (block_t *)manager->ReadBlockFromFile(block_id);
+    value_t *curr_block_values = curr_block->values;
     value_t *curr_block_error = error_T[block_id];
-    uint64_t curr_block_nnz_count = tensor->blocks[block_id]->nnz_count;
+    uint64_t curr_block_nnz_count = curr_block->nnz_count;
 #pragma omp parallel for schedule(static) reduction(+ : Error)
     for (uint64_t nnz = 0; nnz < curr_block_nnz_count; ++nnz) {
       value_t err_tmp = curr_block_values[nnz] - curr_block_error[nnz];
       Error += err_tmp * err_tmp;
     }
+    delete curr_block;
   }
 
   printf("Error:: %1.3f \t Norm:: %1.3f\n", Error, tensor->norm);
