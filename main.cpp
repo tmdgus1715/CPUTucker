@@ -63,19 +63,17 @@ int main(int argc, char *argv[])
     tensor_manager->CreateTensorBlocks<optimizer_t>(&input_tensor, &tensor_blocks, optimizer);
     tensor_blocks->ToString();
     tensor_manager->WriteBlockToFile(tensor_blocks);
-    tensor_manager->ReadBlockFromFile(1);
 
-    for (uint64_t bid = 0; bid < tensor_blocks->block_count; ++bid)
-    {
-      tensor_blocks->blocks[bid]->ToString();
-    }
+    // for (uint64_t bid = 0; bid < tensor_blocks->block_count; ++bid)
+    // {
+    //   tensor_blocks->blocks[bid]->ToString();
+    // }
 
     // TODO block scheduling
     MYPRINT("\t... Initialize Scheduler\n");
     scheduler_t *scheduler = new scheduler_t;
     scheduler->Initialize();
     scheduler->Schedule(tensor_blocks);
-
 
     delete input_tensor;
     delete tensor_blocks;
