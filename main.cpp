@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     index_t *partition_dims = optimizer->FindPartitionParms();
     optimizer->ToString();
 
-    std::cout << optimizer->mem_size << " " << optimizer->block_count;
+    std::cout << optimizer->mem_size << " " << optimizer->block_count << std::endl;
 
     // Create tensor blocks ( = sub-tensors )
     tensor_t *tensor_blocks = new tensor_t(input_tensor);
