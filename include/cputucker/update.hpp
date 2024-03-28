@@ -8,13 +8,14 @@
 #include "cputucker/constants.hpp"
 #include "cputucker/delta.hpp"
 #include "cputucker/helper.hpp"
+//#include "cputucker/ioasyncdelta.hpp"
 
 namespace supertensor {
 namespace cputucker {
 
-template <typename TensorType, typename MatrixType, typename TensorManagerType>
+template <typename TensorType, typename MatrixType, typename TensorManager>
 void ComputingBC(TensorType *tensor, MatrixType **B,
-                 MatrixType **C, int curr_factor_id, int rank, TensorManagerType *manager) {
+                 MatrixType **C, int curr_factor_id, int rank, TensorManager *manager) {
   using tensor_t = TensorType;
   using block_t = typename tensor_t::block_t;
   using index_t = typename tensor_t::index_t;
@@ -53,17 +54,17 @@ void ComputingBC(TensorType *tensor, MatrixType **B,
   for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
     // std::cout << "block [" << block_id << "] is being processed" << std::endl;
     block_t *curr_block = (block_t *)manager->ReadBlockFromFile(block_id);
-    index_t *curr_block_coord = curr_block->get_block_coord();
-
     value_t *curr_delta = cputucker::allocate<value_t>(tensor->get_max_nnz_count_in_block() * rank);
     manager->ReadDeltaFromFile(curr_delta, tensor, curr_block, rank);
-
+    
+    index_t *curr_block_coord = curr_block->get_block_coord();
     index_t part_id = curr_block_coord[curr_factor_id];
     assert(part_id < part_dims[curr_factor_id]);
 
 #pragma omp parallel for schedule(dynamic)  // schedule(auto)
     for (index_t row = 0; row < row_count; ++row) {
-      uint64_t nnz = (curr_block->count_nnz[curr_factor_id][row + 1]) - (curr_block->count_nnz[curr_factor_id][row]);
+      uint64_t nnz = curr_block->count_nnz[curr_factor_id][row + 1] -
+                     curr_block->count_nnz[curr_factor_id][row];
       index_t where_ptr = curr_block->count_nnz[curr_factor_id][row];
       for (kk = 0; kk < nnz; ++kk) {
         index_t pos_curr_entry =
@@ -73,9 +74,10 @@ void ComputingBC(TensorType *tensor, MatrixType **B,
         uint64_t pos_delta = pos_curr_entry * rank;
         uint64_t pos_B = row * rank * rank;
         uint64_t pos_C = row * rank;
-
+        
         for (ii = 0; ii < rank; ++ii) {
           value_t cache = curr_delta[pos_delta + ii];
+          #pragma code_align 32
           for (jj = 0; jj < rank; ++jj) {
             B[part_id][pos_B++] += cache * curr_delta[pos_delta + jj];
           }
@@ -83,17 +85,14 @@ void ComputingBC(TensorType *tensor, MatrixType **B,
         }
       }
     }
-    delete curr_block;
-    delete curr_delta;
   }
 }
 
-template <typename TensorType, typename MatrixType, typename ValueType, typename SchedulerType, typename TensorManagerType>
+template <typename TensorType, typename MatrixType, typename ValueType, typename SchedulerType, typename TensorManager>
 void UpdateFactorMatrices(TensorType *tensor, TensorType *core_tensor,
                           ValueType ***factor_matrices,
                           MatrixType **B, MatrixType **C, int rank,
-                          SchedulerType *scheduler,
-                          TensorManagerType *manager) {
+                          SchedulerType *scheduler, TensorManager *manager) {
   using tensor_t = TensorType;
   using block_t = typename tensor_t::block_t;
   using index_t = typename tensor_t::index_t;
@@ -109,7 +108,7 @@ void UpdateFactorMatrices(TensorType *tensor, TensorType *core_tensor,
     MYPRINT("[ Update factor matrix %d ]\n", curr_factor_id);
 
     double delta_time = omp_get_wtime();
-    ComputingDelta<TensorType, ValueType, SchedulerType, TensorManagerType>(
+    ComputingDelta<tensor_t, ValueType, SchedulerType, TensorManager>(
         tensor, core_tensor, factor_matrices, curr_factor_id, rank,
         scheduler, manager);
     printf("\t- Elapsed time for Computing Delta: %lf\n", omp_get_wtime() - delta_time);

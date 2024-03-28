@@ -4,9 +4,11 @@
             "${workspaceFolder}/include",
             "${workspaceFolder}/lib",
             "${workspaceFolder}/**",
-            "/home/jihye/sdk/boost_1_66_0/include",
-            "/usr/lib/gcc/x86_64-linux-gnu/9/include",
-            "/usr/lib/x86_64-linux-gnu"
+            "/usr/include/boost",
+            "/usr/lib/gcc/x86_64-linux-gnu",
+            "/usr/lib/x86_64-linux-gnu",
+            "/usr/include/x86_64-linux-gnu/mpich",
+            "/usr/lib/x86_64-linux-gnu/openmpi/include"
         ]
     },
     "configurations": [

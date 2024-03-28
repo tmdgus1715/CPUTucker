@@ -56,6 +56,8 @@ class Tensor {
   uint64_t nnz_count;  // Number of nonzeros
   value_t norm;
 
+  bool is_input_tensor{false};
+
   /* Block Description */
   index_t *partition_dims;
   index_t *block_dims;

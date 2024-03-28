@@ -44,6 +44,8 @@ class Block {
   void set_dims(index_t *new_dims);
   void set_is_allocated(bool new_is_allocated) { this->_is_allocated = new_is_allocated; }
 
+  bool equals(const this_t &other) const;
+
 
 public:
   /* Metadata */
@@ -51,6 +53,8 @@ public:
   index_t *dims;
   uint64_t nnz_count;
   
+  bool is_input_block{false};
+
   /* Data */
   value_t *values;
   index_t *indices[constants::kMaxOrder];

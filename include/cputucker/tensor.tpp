@@ -68,6 +68,9 @@ Tensor<TENSOR_TEMPLATE_ARGS>::~Tensor() {
     if (blocks) {
         for (uint64_t i = 0; i < block_count; ++i) {
             if (blocks[i]) {
+                if (is_input_tensor) {
+                    blocks[i]->is_input_block = true;
+                }
                 delete blocks[i];
                 blocks[i] = nullptr;
             }

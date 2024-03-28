@@ -1,0 +1,24 @@
+{
+    "configurations": [
+    {
+        "name": "(gdb) 시작",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "/home/sh/vscode/CPUTucker/CPUTucker-gxx",
+        "args": [
+            "-i",
+            "/home/sh/nell-2.tns",
+            //"/home/sh/amazon-reviews.tns",
+            "-o",
+            "3",
+            "-r",
+            "10"
+          ],
+        "stopAtEntry": false,
+        "cwd": "/home/sh/vscode/CPUTucker",
+        "environment": [],
+        "externalConsole": false,
+        "MIMode": "gdb",
+    }
+    ]
+}

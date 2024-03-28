@@ -6,12 +6,13 @@
 			"label": "C/C++: g++ build active file",
 			"command": "/usr/bin/g++",
 			"args": [
-				"${workspaceFolder}/*.cpp",
-				"${workspaceFolder}/source/cputucker/*.cpp",
+				"-g",
+				"${workspaceFolder}/main.cpp",
+				"${workspaceFolder}/source/cputucker/cmdline_opts.cpp",
 				"-Wdeprecated-declarations",
 				"-Wno-write-strings",
 				"-fopenmp",
-				"-O2",
+				"-O0",
 				"-I${workspaceFolder}/include",
 				"-I${workspaceFolder}/lib",
 				"-I",
@@ -23,7 +24,7 @@
 				"-lboost_filesystem",
 				"-lboost_system",
 				"-o",
-				"${workspaceFolder}/CPUTucker",
+				"${workspaceFolder}/CPUTucker-gxx"
 			],
 			"options": {
 				"cwd": "${fileDirname}"
@@ -31,11 +32,9 @@
 			"problemMatcher": [
 				"$gcc"
 			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			"group": "build",
 			"detail": "compiler: /usr/bin/g++"
 		}
+
 	]
 }

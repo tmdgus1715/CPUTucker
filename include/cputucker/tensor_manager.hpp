@@ -29,13 +29,13 @@ namespace supertensor
       void CreateTensorBlocks(tensor_t **src, tensor_t **dest, OptimizerType *optimizer);
 
       //---write---
-      void WriteBlockToFile(tensor_t *tensor);
-      void WriteDeltaToFile(TensorType *tensor, BlockType *block, ValueType *delta_block, int rank);
+      void WriteTensorBlocksToFile(tensor_t *tensor);
+      void WriteDeltaToFile(tensor_t *tensor, block_t *block, value_t *delta_block, int rank);
 
       //---read---
       void *ReadTensorFromFile();
       void *ReadBlockFromFile(uint64_t block_id);
-      void ReadDeltaFromFile(ValueType *delta_block, TensorType *tensor, BlockType *block, int rank);
+      void ReadDeltaFromFile(value_t *delta_block, tensor_t *tensor, block_t *block, int rank);
 
     private:
       void _WriteTensorMetadataToFile(std::ofstream &tensor_md_file, tensor_t *tensor);

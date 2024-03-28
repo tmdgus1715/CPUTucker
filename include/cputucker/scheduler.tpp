@@ -8,6 +8,8 @@
 #include <iostream>
 #include <vector>
 
+#include <fstream>
+
 namespace supertensor {
 namespace cputucker {
 
@@ -36,6 +38,43 @@ void Scheduler<SCHEDULER_TEMPLATE_ARGS>::Schedule(tensor_t *tensor) {
 
   this->task_count = 0;
   for (uint64_t block_id = 0; block_id < tensor->block_count; ++block_id) {
+    tasks.push_back(Task(sort_block_id[block_id], sort_nnz_count[sort_block_id[block_id]]));
+    ++this->task_count;
+  }
+
+}
+
+SCHEDULER_TEMPLATE
+void Scheduler<SCHEDULER_TEMPLATE_ARGS>::testSchedule() {
+  // Dimension partitioning
+  std::vector<uint64_t> sort_nnz_count, sort_block_id;
+  uint64_t block_count = 1000;
+  sort_nnz_count.resize(block_count);
+  sort_block_id.resize(block_count);
+
+  //block.md에서 nnz_count를 가져와서 sort_nnz_count에 넣어준다.
+  std::ifstream blockFile("out/nnz.md");
+  if (blockFile.is_open()) {
+    for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
+      blockFile >> sort_nnz_count[block_id];
+    }
+    blockFile.close();
+  } else {
+    std::cerr << "Failed to open nnz.md" << std::endl;
+  }
+
+  for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
+    sort_block_id[block_id] = block_id;
+  }
+
+  // Sort block id by the number of nonzeros
+  std::sort(sort_block_id.begin(), sort_block_id.end(),
+            [&](const uint64_t a, const uint64_t &b) {
+              return (sort_nnz_count[a] < sort_nnz_count[b]);
+            });
+
+  this->task_count = 0;
+  for (uint64_t block_id = 0; block_id < block_count; ++block_id) {
     tasks.push_back(Task(sort_block_id[block_id], sort_nnz_count[sort_block_id[block_id]]));
     ++this->task_count;
   }

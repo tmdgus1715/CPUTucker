@@ -27,6 +27,7 @@ namespace cputucker {
     }
     void Initialize();
     void Schedule(tensor_t *tensor);
+    void testSchedule();
 
   public:
     struct Task {

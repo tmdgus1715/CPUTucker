@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <type_traits>  // std::remove_pointer
+#include <fstream>
 
 namespace supertensor {
 namespace cputucker {
@@ -66,6 +67,36 @@ template <typename T>
 T abs(T x) {
   return x > 0 ? x : -x;
 }
+
+inline uint64_t rdtsc() {
+  unsigned int lo, hi;
+  __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi));
+  return ((uint64_t)hi << 32) | lo;
+}
+
+inline unsigned long long getMemAvailable() {
+    std::ifstream meminfo("/proc/meminfo");
+    std::string line;
+
+    if (meminfo.is_open()) {
+        while (getline(meminfo, line)) {
+            // MemAvailable 항목을 찾습니다.
+            if (line.substr(0, 13) == "MemAvailable:") {
+                std::size_t pos = line.find(" ");
+                line = line.substr(pos + 1);
+                pos = line.find(" kB");
+                unsigned long long memAvailable = std::stoull(line.substr(0, pos)) * 1024;
+                meminfo.close();        
+                return memAvailable;
+            }
+        }
+    } else {
+        std::cerr << "Unable to open /proc/meminfo" << std::endl;
+    }
+
+    return -1;
+}
+
 
 }  // namespace cputucker
 }  // namespace supertensor

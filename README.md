@@ -11,17 +11,20 @@ CPUTucker requires OpenMP library.
 **Input tensor must follow tab- or space-separated format and base-1 indexing.**
 
 ``````
-$ ./CPUTucker -i [input_path] -o [order] -r [tucker_rank]
+$ ./CPUTucker-[AVX]-[compiler] -i [input_path] -o [order] -r [tucker_rank]
 ``````
+- **AVX**: using AVX or not
+- **compiler**: g++ or icpx
+
 ## Program Options
 - **-h** or **--help**: Display help menu
 - **-i** or **--input**: Input tensor path
 - **-o** or **--order**: Input tensor order
 - **-r** or **--rank**: Tucker rank (default 10)
 
-## Compile Options
+## Build
 ``````
--I[include_path] -L[lib_path] -fopenmp -O2 -std=c+11 -lboost_program_options -lboost_filesystem -lboost_system
+make all
 ``````
 ## Datasets
 
